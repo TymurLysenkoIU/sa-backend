@@ -1,0 +1,105 @@
+version: "3.8"
+services:
+  userinfo-server:
+    build:
+      context: ..
+      dockerfile: docker/api/django.Dockerfile
+      args:
+        DJANGO_PROJECT_LOCAL_PATH: "src/userinfo-server"
+        PYTHON_REQUIREMENTS_LOCAL_PATH: "src/userinfo-server/req.txt"
+        APP_NAME: "osu_django"
+    container_name: userinfo-server
+    depends_on:
+      - user-database
+    expose:
+      - 80
+    environment:
+      POSTGRES_USER: ${USERDB_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${USERDB_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${USERDB_POSTGRES_DB:-user-db}
+      DB_HOST: "user-database"
+      DB_PORT: "5432"
+      DJANGO_DEBUG: "False"
+      APP_SECRET: ${USERINFO_APP_SECRET:?No secret is provided to userinfo server}
+      API_ALLOWED_HOSTS: "*"
+      API_STATIC_FILES: ${USERINFO_API_STATIC_FILES:-/srv/static}
+    volumes:
+      - ./userinfo/static:${USERINFO_API_STATIC_FILES:-/srv/static}
+
+  user-database:
+    image: postgres:13.0-alpine
+    container_name: sa-project-user-database
+    expose:
+      - "5432"
+    ports:
+      - "${USER_PG_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${USERDB_POSTGRES_USER:?Postgres user is not provided}
+      POSTGRES_PASSWORD: ${USERDB_POSTGRES_PASSWORD:?Postgres password is not provided}
+      POSTGRES_DB: "${USERDB_POSTGRES_DB:-user-db}"
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - ./postgres/user/data/:/var/lib/postgresql/data/
+
+
+  map-server:
+    build:
+      context: ..
+      dockerfile: docker/api/django.Dockerfile
+      args:
+        DJANGO_PROJECT_LOCAL_PATH: "src/map-server"
+        APP_NAME: "MapStorageServer"
+    container_name: map-server
+    depends_on:
+      - map-database
+      # - # TODO: mongo
+    expose:
+      - 80
+    environment:
+      POSTGRES_USER: ${MAPDB_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${MAPDB_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${MAPDB_POSTGRES_DB:-map-db}
+      DB_HOST: "map-database"
+      DB_PORT: "5432"
+      DJANGO_DEBUG: "False"
+      APP_SECRET: ${MAP_APP_SECRET:?No secret is provided to map server}
+      API_ALLOWED_HOSTS: "*"
+      API_STATIC_FILES: ${MAP_API_STATIC_FILES:-/srv/static}
+    volumes:
+      - ./map/static:${MAP_API_STATIC_FILES:-/srv/static}
+
+  map-database:
+    image: postgres:13.0-alpine
+    container_name: sa-project-map-database
+    expose:
+      - "5432"
+    ports:
+      - "${MAP_PG_PORT:-5433}:5432"
+    environment:
+      POSTGRES_USER: ${MAPDB_POSTGRES_USER:?Postgres user is not provided}
+      POSTGRES_PASSWORD: ${MAPDB_POSTGRES_PASSWORD:?Postgres password is not provided}
+      POSTGRES_DB: "${MAPDB_POSTGRES_DB:-map-db}"
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - ./postgres/map/data/:/var/lib/postgresql/data/
+
+
+  proxy:
+    image: nginx:1.19-alpine
+    container_name: sa-project-proxy
+    depends_on:
+      - userinfo-server
+    environment:
+      NGINX_USERINFO_API_PORT: ${NGINX_USERINFO_API_PORT:-8000}
+      NGINX_MAP_API_PORT: ${NGINX_MAP_API_PORT:-8001}
+      USERINFO_API_SERVER: ${USERINFO_API_SERVER:?Userinfo API server name/ip is not provided}
+      MAP_API_SERVER: ${MAP_API_SERVER:?Map API server name/ip is not provided}
+    ports:
+      - "${NGINX_USERINFO_API_PORT:-8000}:${NGINX_USERINFO_API_PORT:-8000}"
+      - "${NGINX_MAP_API_PORT:-8001}:${NGINX_MAP_API_PORT:-8001}"
+    volumes:
+      - ./userinfo/static:/srv/userinfo-api/static:ro
+      - ./map/static:/srv/map-api/static:ro
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+

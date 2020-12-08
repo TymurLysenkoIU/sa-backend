@@ -1,0 +1,12 @@
+server {
+  listen 0.0.0.0:${NGINX_USERINFO_API_PORT};
+  server_name ${USERINFO_API_SERVER};
+
+  location /static/ {
+    root /srv/userinfo-api;
+  }
+
+  location / {
+    proxy_pass http://userinfo-server:80$request_uri;
+  }
+}

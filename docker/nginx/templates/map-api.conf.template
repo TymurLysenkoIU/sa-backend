@@ -1,0 +1,12 @@
+server {
+  listen 0.0.0.0:${NGINX_MAP_API_PORT};
+  server_name ${MAP_API_SERVER};
+
+  location /static/ {
+    root /srv/map-api;
+  }
+
+  location / {
+    proxy_pass http://map-server:80$request_uri;
+  }
+}
