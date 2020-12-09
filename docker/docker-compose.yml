@@ -59,6 +59,8 @@ services:
       POSTGRES_USER: ${MAPDB_POSTGRES_USER}
       POSTGRES_PASSWORD: ${MAPDB_POSTGRES_PASSWORD}
       POSTGRES_DB: ${MAPDB_POSTGRES_DB:-map-db}
+      POSTGRES_DB_HOST: "map-database"
+      POSTGRES_DB_PORT: "5432"
       DB_HOST: "map-database"
       DB_PORT: "5432"
       DJANGO_DEBUG: ""
