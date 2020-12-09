@@ -52,15 +52,19 @@ services:
     container_name: map-server
     depends_on:
       - map-database
-      # - # TODO: mongo
+      - map-mongo
     expose:
       - 80
     environment:
       POSTGRES_USER: ${MAPDB_POSTGRES_USER}
       POSTGRES_PASSWORD: ${MAPDB_POSTGRES_PASSWORD}
       POSTGRES_DB: ${MAPDB_POSTGRES_DB:-map-db}
-      DB_HOST: "map-database"
-      DB_PORT: "5432"
+      POSTGRES_DB_HOST: "map-database"
+      POSTGRES_DB_PORT: "5432"
+      DJONGO_DB_HOST: "map-mongo"
+      DJONGO_DB_PORT: "27017"
+      DJONGO_DB_USER: "${MAP_MONGO_ROOT_USERNAME}"
+      DJONGO_DB_PASSWORD: "${MAP_MONGO_ROOT_PASSWORD}"
       DJANGO_DEBUG: "False"
       APP_SECRET: ${MAP_APP_SECRET:?No secret is provided to map server}
       API_ALLOWED_HOSTS: "*"
@@ -78,10 +82,23 @@ services:
     environment:
       POSTGRES_USER: ${MAPDB_POSTGRES_USER:?Postgres user is not provided}
       POSTGRES_PASSWORD: ${MAPDB_POSTGRES_PASSWORD:?Postgres password is not provided}
-      POSTGRES_DB: "${MAPDB_POSTGRES_DB:-map-db}"
+      POSTGRES_DB: "${MAPDB_POSTGRES_DB:-metadata}"
       PGDATA: /var/lib/postgresql/data
     volumes:
       - ./postgres/map/data/:/var/lib/postgresql/data/
+
+  map-mongo:
+    container_name: map-mongo
+    image: mongo:4.2.10-bionic
+    command: --config /etc/mongo/mongod.conf --port 27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MAP_MONGO_ROOT_USERNAME:?Mongo user was not specified}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MAP_MONGO_ROOT_PASSWORD:?Mongo password was not specified}"
+    expose:
+      - 27017
+    volumes:
+      - "./mongo/mongo-conf:/etc/mongo"
+      - "./mongo/mongo-init:/docker-entrypoint-initdb.d"
 
 
   proxy:
@@ -89,6 +106,7 @@ services:
     container_name: sa-project-proxy
     depends_on:
       - userinfo-server
+      - map-server
     environment:
       NGINX_USERINFO_API_PORT: ${NGINX_USERINFO_API_PORT:-8000}
       NGINX_MAP_API_PORT: ${NGINX_MAP_API_PORT:-8001}
