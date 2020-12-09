@@ -19,7 +19,7 @@ services:
       POSTGRES_DB: ${USERDB_POSTGRES_DB:-user-db}
       DB_HOST: "user-database"
       DB_PORT: "5432"
-      DJANGO_DEBUG: "False"
+      DJANGO_DEBUG: ""
       APP_SECRET: ${USERINFO_APP_SECRET:?No secret is provided to userinfo server}
       API_ALLOWED_HOSTS: "*"
       API_STATIC_FILES: ${USERINFO_API_STATIC_FILES:-/srv/static}
@@ -61,7 +61,7 @@ services:
       POSTGRES_DB: ${MAPDB_POSTGRES_DB:-map-db}
       DB_HOST: "map-database"
       DB_PORT: "5432"
-      DJANGO_DEBUG: "False"
+      DJANGO_DEBUG: ""
       APP_SECRET: ${MAP_APP_SECRET:?No secret is provided to map server}
       API_ALLOWED_HOSTS: "*"
       API_STATIC_FILES: ${MAP_API_STATIC_FILES:-/srv/static}
