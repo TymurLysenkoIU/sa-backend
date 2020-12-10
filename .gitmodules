@@ -1,9 +1,9 @@
 [submodule "src/userinfo-server"]
 	path = src/userinfo-server
-	url = git@github.com:Leosimetti/osu_django.git
+	url = https://github.com/Leosimetti/osu_django.git
 [submodule "src/map-server"]
 	path = src/map-server
-	url = git@github.com:supersloy/StorageServer.git
+	url = https://github.com/supersloy/StorageServer.git
 [submodule "docker/wait-for-it"]
 	path = docker/wait-for-it
-	url = git@github.com:vishnubob/wait-for-it.git
+	url = https://github.com/vishnubob/wait-for-it.git
