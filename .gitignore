@@ -1,0 +1,6 @@
+docker/map/static
+docker/userinfo/static
+
+docker/postgres/data
+docker/postgres/map
+docker/postgres/user
